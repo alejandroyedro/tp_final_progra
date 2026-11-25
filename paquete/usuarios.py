@@ -6,6 +6,7 @@ from .funciones import recortar
 
 USUARIO_INICIAL = "Pedro"  
 CONTRASENIA_INICIAL = "1234"  
+MAX_INTENTOS = 3  
 
 
 def validar_contrasenia(contra_usu: str, contra_regis: str) -> bool:
@@ -36,8 +37,19 @@ def validar_usuario(nombre_usuario: str, usuario_registrado: str) -> bool:
     return (nombre_usuario) == (usuario_registrado)
 
 
+def es_usuario_valido(nombre_usuario: str) -> bool:
+    """Comprueba que un usuario nuevo tenga al menos cuatro caracteres y una letra."""
+    i = 0
+    tiene_letra = False
+    while i < len(nombre_usuario) and tiene_letra == False:
+        if nombre_usuario[i].isalpha():
+            tiene_letra = True
+        i += 1
+    return len(nombre_usuario) >= 4 and tiene_letra
+
+
 def guardar_usuarios(usuarios: list) -> None:  
-    """Guarda usuarios a usuarios.csv con encabezados.
+    """Guarda usuarios a usuarios.txt con encabezados.
 
     Args:
         usuarios (list): Lista de usuarios registrados.
@@ -46,7 +58,7 @@ def guardar_usuarios(usuarios: list) -> None:
         No devuelve un valor.
     """
 
-    archivo = open(ruta_archivo("usuarios.csv"), "w", encoding="utf-8", newline="")    
+    archivo = open(ruta_archivo("usuarios.txt"), "w", encoding="utf-8", newline="")    
     escribir_registro(archivo, ["usuario", "contrasenia"])    
     i = 0
 
@@ -58,17 +70,17 @@ def guardar_usuarios(usuarios: list) -> None:
 
 
 def cargar_usuarios() -> list | None:  
-    """Carga usuarios de usuarios.csv o crea archivo con usuario inicial.
+    """Carga usuarios de usuarios.txt o crea archivo con usuario inicial.
 
     Returns:
         list | None: Usuarios leídos, o None si el archivo CSV no es válido.
     """
 
-    archivo = open(ruta_archivo("usuarios.csv"), "a")
+    archivo = open(ruta_archivo("usuarios.txt"), "a")
 
     archivo.close()
 
-    archivo = open(ruta_archivo("usuarios.csv"), "r", encoding="utf-8", newline="")
+    archivo = open(ruta_archivo("usuarios.txt"), "r", encoding="utf-8", newline="")
     
     registros = leer_registros(archivo)
 
@@ -106,27 +118,23 @@ def registrar_usuario(usuario: str, contrasenia: str) -> tuple:
     return (usuario, contrasenia)
 
 
-def buscar_usuario(usuarios: list, nombre: str) -> int:  
+def buscar_usuario(usuarios: list, nombre: str, indice: int = 0) -> int:
     """Busca usuario y retorna índice (-1 si no existe).
 
     Args:
         usuarios (list): Lista de usuarios registrados.
         nombre (str): Nombre que se utiliza en la operación.
+        indice (int): Posición desde la que se inicia la búsqueda.
 
     Returns:
         int: Índice del usuario, o -1 si no se encuentra.
     """
-
-    i = 0
-    resultado = -1
-
-    while i < len(usuarios) and resultado == -1:
-
-        if validar_usuario(usuarios[i][0], nombre):
-            resultado = i
-
-        i = i + 1
-
+    if indice >= len(usuarios):
+        resultado = -1
+    elif validar_usuario(usuarios[indice][0], nombre):
+        resultado = indice
+    else:
+        resultado = buscar_usuario(usuarios, nombre, indice + 1)
     return resultado
 
 
@@ -152,16 +160,24 @@ def autenticar(usuarios: list) -> None:
 
             print("--- INICIO DE SESIÓN ---")
 
-            contraseña = input("Ingrese su contraseña: ")
+            intentos = 0
 
-            if validar_contrasenia(contraseña, usuarios[posicion][1]):
-                
-                print(f"Bienvenido, {nombre_usuario}.")
-                
-                autenticado = True
-        
+            while intentos < MAX_INTENTOS and autenticado == False:
+
+                contraseña = input("Ingrese su contraseña: ")
+
+                if validar_contrasenia(contraseña, usuarios[posicion][1]):
+                    print(f"Bienvenido, {nombre_usuario}.")
+                    autenticado = True
+                else:
+                    intentos = intentos + 1
+                    if intentos < MAX_INTENTOS:
+                        print(f"Contraseña incorrecta. Le quedan {MAX_INTENTOS - intentos} intentos.")
+                    else:
+                        print("Se agotaron los intentos de contraseña.")
+        elif es_usuario_valido(nombre_usuario) == False:
+            print("Error: el usuario debe tener al menos 4 caracteres y una letra.")
         else:
-            
             print("--- REGISTRO ---")
             
             nueva_contrasenia = input("Ingrese su contraseña: ")
@@ -173,13 +189,12 @@ def autenticar(usuarios: list) -> None:
             guardar_usuarios(usuarios)
         
             print("Usuario registrado correctamente.")
-            
             print("--- INICIO DE SESIÓN ---")
-            
-            
+                        
             login_exitoso = False
             
-            while login_exitoso == False:
+            intentos = 0            
+            while login_exitoso == False and intentos < MAX_INTENTOS:
                 
                 nombre_usuario_login = recortar(input("Ingrese su nombre de usuario: "))
                 
@@ -192,4 +207,9 @@ def autenticar(usuarios: list) -> None:
                     login_exitoso = True                    
                     autenticado = True
                 else:
-                    print("Usuario o contraseña incorrectos.")
+                    intentos = intentos + 1
+
+                    if intentos < MAX_INTENTOS:
+                        print(f"Usuario o contraseña incorrectos. Le quedan {MAX_INTENTOS - intentos} intentos.")
+                    else:
+                        print("Se agotaron los intentos de inicio de sesión.")

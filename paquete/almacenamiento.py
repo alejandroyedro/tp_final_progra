@@ -142,6 +142,8 @@ def leer_tabla_archivo(tabla: dict) -> bool:
     Returns:
         bool: True si la tabla se cargó correctamente; False si contiene errores.
     """
+    archivo = open(ruta_archivo(tabla["archivo"]), "a", encoding="utf-8")
+    archivo.close()
     archivo = open(ruta_archivo(tabla["archivo"]), "r", encoding="utf-8", newline="")
     registros = leer_registros(archivo)
     archivo.close()

@@ -119,8 +119,8 @@ def leer_texto(mensaje: str) -> str:
     return texto
 
 
-def leer_nombre(mensaje: str) -> str:  
-    """Lee nombre sin números, con primera letra mayúscula.
+def leer_nombre(mensaje: str) -> str:
+    """Lee un nombre válido, admitiendo espacios, guiones y apóstrofos.
 
     Args:
         mensaje (str): Mensaje que se muestra para solicitar el dato.
@@ -128,26 +128,10 @@ def leer_nombre(mensaje: str) -> str:
     Returns:
         str: Nombre ingresado que cumple las validaciones.
     """
-    nombre = pasar_minusculas(recortar(input(mensaje)))
-    nombre = pasar_mayuscula_primera(nombre)
-    
-    while nombre == "" or len(nombre) > MAX_LARGO:
-        if nombre == "":
-            print("Error: el nombre no puede estar vacío.")
-        else:
-            print(f"Error: el nombre no puede superar {MAX_LARGO} caracteres.")
-        nombre = pasar_minusculas(recortar(input(mensaje)))
-        nombre = pasar_mayuscula_primera(nombre)
-    
-    i = 0
-    while i < len(nombre):
-        if validar_numero(nombre[i]):
-            print(f"Error: el nombre no puede contener números.")
-            nombre = pasar_minusculas(recortar(input(mensaje)))
-            nombre = pasar_mayuscula_primera(nombre)
-            i = 0
-        else:
-            i = i + 1
+    nombre = leer_texto(mensaje)
+    while es_nombre_valido(nombre) == False:
+        print("Error: ingrese solo letras.")
+        nombre = leer_texto(mensaje)
     return nombre
 
 

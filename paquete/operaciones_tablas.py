@@ -70,23 +70,24 @@ def crear_tabla(proyecto: dict, proyectos: dict) -> None:
         i += 1
     if repetido:
         print("Error: ya existe una tabla con ese nombre.")
-        return
-    tabla = {
-        "nombre": nombre, "archivo": "", "columnas": [],
-        "tipos_datos": [], "rangos": [], "es_notas": False,
-        "filas": [], "denominaciones": []
-    }
-    cantidad = leer_entero_postivo("Cantidad de columnas (1-50): ", 1, 50)
-    i = 0
-    while i < cantidad:
-        nombre_columna, tipo = pedir_columna(tabla)
-        tabla["columnas"] += [nombre_columna]
-        tabla["tipos_datos"] += [tipo]
-        tabla["rangos"] += [None]
-        i += 1
-    proyecto["tablas"] += [tabla]
-    guardar_catalogo(proyectos)
-    print("Tabla creada.")
+    else:
+        tabla = {
+            "nombre": nombre, "archivo": "", "columnas": [],
+            "tipos_datos": [], "rangos": [], "es_notas": False,
+            "filas": [], "denominaciones": []
+        }
+        cantidad = leer_entero_postivo("Cantidad de columnas (1-50): ", 1, 50)
+        i = 0
+        while i < cantidad:
+            nombre_columna, tipo = pedir_columna(tabla)
+            tabla["columnas"] += [nombre_columna]
+            tabla["tipos_datos"] += [tipo]
+            tabla["rangos"] += [None]
+            i += 1
+        proyecto["tablas"] += [tabla]
+        guardar_catalogo(proyectos)
+        print("Tabla creada.")
+    return
 
 
 def copiar_tabla(tabla: dict) -> dict:
@@ -361,27 +362,28 @@ def agregar_fila(tabla: dict, proyectos: dict, matriz: bool) -> None:
     """
     if len(tabla["filas"]) >= MAX_FILAS:
         print("La tabla alcanzó el máximo de filas.")
-        return
-    modo = elegir_modo()
-    copia = copiar_tabla(tabla)
-    numero = len(copia["filas"]) + 1
-    denominar = leer_si_no("¿Desea denominar la fila?")
-    copia["denominaciones"] += [pedir_etiqueta(denominar, numero)]
-    fila = []
-    i = 0
-    while i < len(copia["columnas"]):
-        fila += [""]
-        i += 1
-    copia["filas"] += [fila]
-    if modo == "a":
-        recorrer_secuencial(copia, "a", numero - 1, matriz)
-        guardar_cambios(tabla, copia, proyectos)
-        if leer_si_no("¿Desea elegir otra fila o columna?"):
-            editar_secuencial(tabla, proyectos, matriz)
     else:
-        guardar_cambios(tabla, copia, proyectos)
-        print(f"Se agregó la fila {numero}. Puede cargar sus celdas ahora.")
-        editar_distribuida(tabla, proyectos, matriz)
+        modo = elegir_modo()
+        copia = copiar_tabla(tabla)
+        numero = len(copia["filas"]) + 1
+        denominar = leer_si_no("¿Desea denominar la fila?")
+        copia["denominaciones"] += [pedir_etiqueta(denominar, numero)]
+        fila = []
+        i = 0
+        while i < len(copia["columnas"]):
+            fila += [""]
+            i += 1
+        copia["filas"] += [fila]
+        if modo == "a":
+            recorrer_secuencial(copia, "a", numero - 1, matriz)
+            guardar_cambios(tabla, copia, proyectos)
+            if leer_si_no("¿Desea elegir otra fila o columna?"):
+                editar_secuencial(tabla, proyectos, matriz)
+        else:
+            guardar_cambios(tabla, copia, proyectos)
+            print(f"Se agregó la fila {numero}. Puede cargar sus celdas ahora.")
+            editar_distribuida(tabla, proyectos, matriz)
+    return
 
 
 def agregar_columna(tabla: dict, proyectos: dict, matriz: bool) -> None:
@@ -397,30 +399,31 @@ def agregar_columna(tabla: dict, proyectos: dict, matriz: bool) -> None:
     """
     if len(tabla["columnas"]) >= 50:
         print("La tabla alcanzó el máximo de columnas.")
-        return
-    copia = copiar_tabla(tabla)
-    nombre, tipo = pedir_columna(copia)
-    copia["columnas"] += [nombre]
-    copia["tipos_datos"] += [tipo]
-    copia["rangos"] += [None]
-    i = 0
-    while i < len(copia["filas"]):
-        copia["filas"][i] += [""]
-        i += 1
-    if len(copia["filas"]) == 0:
-        guardar_cambios(tabla, copia, proyectos)
     else:
-        modo = elegir_modo()
-        if modo == "a":
-            columna = len(copia["columnas"]) - 1
-            recorrer_secuencial(copia, "b", columna, matriz)
+        copia = copiar_tabla(tabla)
+        nombre, tipo = pedir_columna(copia)
+        copia["columnas"] += [nombre]
+        copia["tipos_datos"] += [tipo]
+        copia["rangos"] += [None]
+        i = 0
+        while i < len(copia["filas"]):
+            copia["filas"][i] += [""]
+            i += 1
+        if len(copia["filas"]) == 0:
             guardar_cambios(tabla, copia, proyectos)
-            if leer_si_no("¿Desea elegir otra fila o columna?"):
-                editar_secuencial(tabla, proyectos, matriz)
         else:
-            guardar_cambios(tabla, copia, proyectos)
-            print(f"Se agregó la columna {nombre}. Puede cargar sus celdas ahora.")
-            editar_distribuida(tabla, proyectos, matriz)
+            modo = elegir_modo()
+            if modo == "a":
+                columna = len(copia["columnas"]) - 1
+                recorrer_secuencial(copia, "b", columna, matriz)
+                guardar_cambios(tabla, copia, proyectos)
+                if leer_si_no("¿Desea elegir otra fila o columna?"):
+                    editar_secuencial(tabla, proyectos, matriz)
+            else:
+                guardar_cambios(tabla, copia, proyectos)
+                print(f"Se agregó la columna {nombre}. Puede cargar sus celdas ahora.")
+                editar_distribuida(tabla, proyectos, matriz)
+    return
 
 
 def opcion_tablas(proyecto: dict, proyectos: dict) -> None:
